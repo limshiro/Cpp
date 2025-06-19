@@ -6,8 +6,6 @@ using namespace std;
 
 class Field{
     public:
-    vector<bool> o_f;
-    vector<bool> x_f;
     char mode;
 
     Field(): o_f(3*3*3*3, false), x_f(3*3*3*3, false){
@@ -31,33 +29,47 @@ class Field{
         mode_change();
         return true;
     }
-    
-    /*
-    void display_old(){
+     
+    void display_str(){
         int w, x, y, z;
         int disp_idx, idx; 
-        for(w=0; w<3; w++){
-            cout << "Dim:" << w+1 << endl;
-            for(y=0; y<3; y++){
-                for(z=0; z<3; z++){
-                    for(x=0; x<3; x++){
-                        disp_idx = 3*y + x;
+        
+        for(auto wi=1;wi<=3;wi++){
+            cout << "Dim:" << wi;
+            if(wi<3)    cout << "                     | ";
+            else cout << endl;
+        }
+
+        string s0;
+        for(y=0;y<3;y++){
+            s0 = "";
+            for(w=0;w<3;w++){
+                for(z=0;z<3;z++){
+                    for(x=0;x<3;x++){
+                        disp_idx = 3*y + x + 1;
                         idx = 27*w + 9*z + 3*y + x;
-                        if(o_f[idx])    cout << 'o';
-                        else if(x_f[idx])   cout << 'x';
-                        else cout << disp_idx+1;
                         
-                        if(x<3-1) cout << "|";
+                        if(idx == (81-1)/2){
+                            s0 += color("Q", 33);
+                        } else if(o_f[idx]){
+                            s0 += color("o", 32);
+                        } else if(x_f[idx]){
+                            s0 += color("x", 31);
+                        } else {
+                            s0 += to_string(disp_idx);
+                        }
+
+                        if(x<2) s0 += "|";
                     }
-                    if(z<3-1) cout << "     ";
-                    else cout << endl;
+                    if(z<3-1) s0 += "     ";
                 }
+                if(w<3-1) s0 += " | ";
+                else cout << s0 << endl;
             }
         }
     }
-    */
-
-    void display(){
+    
+    /*void display(){
         int w, x, y, z;
         int disp_idx, idx; 
         
@@ -92,6 +104,7 @@ class Field{
             }
         }
     }
+    */
 
     bool judge(){
         if(judge_4D(o_f)){
@@ -111,12 +124,19 @@ class Field{
     }
     
     private:
+    vector<bool> o_f;
+    vector<bool> x_f;
+
     void mode_change(){
         if(mode=='o') mode = 'x';
         else if(mode=='x') mode = 'o';
         else{
             cout << "code incl typo in mode_change" << endl;
         }
+    }
+
+    string color(string s, int id){
+        return "\033[" + to_string(id) + "m" + s + "\033[m";
     }
 
     vector<bool> _4Dto3D(const vector<bool> f, int idx, char fixed){
@@ -241,36 +261,44 @@ class Field{
     }
 };
 
+class Input{
+    public: 
+    void getinput(){
+        getline(cin, in);
+    }
+
+    int converse(){
+        int w=0, z=0, yx=0;
+
+        for(char& c:in)     if(!isdigit(c)) c = ' ';
+        stringstream ss(in);
+        ss >> w >> z >> yx;
+        if(w<1 || 3<w) return -1;
+        else if(z<1 || 3<z) return -1;
+        else if(yx<1 || 9<yx) return -1;
+        else return 27*(w-1) + 9*(z-1) + yx - 1;
+    }
+
+    private:
+    string in;
+};
+
 int main()
 {
     Field f;
-    f.display();
+    f.display_str();
     cout << "Input Style:" << endl;
     cout << "Dim z number\n"<< endl;
 
-    string line;
-    int w, z, yx;
+    Input line;
     int num;
+    
     while(true){
         cout << f.mode << " >> ";
-        getline(cin, line);
-
-        for(char& ch:line){
-            if(ch=='(' || ch==')' || ch==',') {
-            ch = ' ';
-            }
-        }
-
-        stringstream ss(line);
-        ss >> w >> z >> yx;
-        if(z>3 || yx>9){
-            cout << "Error: This position is out of range." << endl;
-            continue;
-        }
-
-        num = 27*(w-1) + 9*(z-1) + yx - 1;
-        if(f.insert_sig(num)){
-            f.display();
+        line.getinput();
+        
+        if(f.insert_sig(line.converse())){
+            f.display_str();
             if(f.judge())   break;
         }
     }
